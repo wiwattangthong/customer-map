@@ -195,8 +195,8 @@
 
             function showDistrictPopup(layer) {
                 const props = layer.feature.properties;
-                const districtName = props.amphoe_th;
-                const provinceName = props.province_th;
+                const districtName = props.AMPHOE_TH; // FIXED: Changed to uppercase
+                const provinceName = props.PROVINCE_TH; // FIXED: Changed to uppercase
 
                 let popupContent = `<div class="customer-popup-content">
                                         <h3 class="text-lg font-bold text-slate-800">${districtName}</h3>
@@ -244,12 +244,12 @@
                     const featureType = layer.feature.geometry.type;
                     if (featureType === 'Polygon') {
                         if (isMarkerInsidePolygon(point, layer)) {
-                            foundDistrict = layer.feature.properties.amphoe_th;
+                            foundDistrict = layer.feature.properties.AMPHOE_TH; // FIXED: Changed to uppercase
                         }
                     } else if (featureType === 'MultiPolygon') {
                         for (const polygon of layer.getLatLngs()) {
                             if (isMarkerInsidePolygon(point, L.polygon(polygon))) {
-                                foundDistrict = layer.feature.properties.amphoe_th;
+                                foundDistrict = layer.feature.properties.AMPHOE_TH; // FIXED: Changed to uppercase
                                 break;
                             }
                         }
@@ -335,7 +335,7 @@
                 if (!geojsonLayer) return;
 
                 geojsonLayer.eachLayer(layer => {
-                    const provinceName = layer.feature.properties.province_th;
+                    const provinceName = layer.feature.properties.PROVINCE_TH; // FIXED: Changed to uppercase
                     if (!provinceData[provinceName]) {
                         provinceData[provinceName] = { layers: [] };
                     }
