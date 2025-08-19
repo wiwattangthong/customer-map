@@ -1,385 +1,322 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดการข้อมูลลูกค้า (Customer Geo-System)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ระบบจัดการข้อมูลลูกค้า (Customer Geo-System)</title>
 
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Leaflet.js for interactive maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    <!-- Google Fonts: Inter & Sarabun -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            font-family: 'Sarabun', 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .customer-popup-content .customer-entry {
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-        }
-        .customer-popup-content .customer-entry:last-child { border-bottom: none; margin-bottom: 0; }
-        .leaflet-popup-content-wrapper { border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .leaflet-container a.leaflet-popup-close-button { color: #64748b; }
-        .leaflet-control-layers {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            border: 1px solid #ddd;
-        }
-    </style>
+  <style>
+    body { font-family:'Sarabun','Inter',sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    .custom-scrollbar::-webkit-scrollbar{ width:8px; }
+    .custom-scrollbar::-webkit-scrollbar-track{ background:#f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb{ background:#94a3b8; border-radius:10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover{ background:#64748b; }
+    .customer-popup-content .customer-entry{ border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:8px; }
+    .customer-popup-content .customer-entry:last-child{ border-bottom:none; margin-bottom:0; }
+    .leaflet-popup-content-wrapper{ border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+    .leaflet-container a.leaflet-popup-close-button{ color:#64748b; }
+    .leaflet-control-layers{ border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); border:1px solid #ddd; }
+  </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
+  <div class="flex h-screen w-screen overflow-hidden">
 
-    <div class="flex h-screen w-screen overflow-hidden">
+    <!-- Left Panel -->
+    <div class="w-full md:w-1/3 h-full bg-white shadow-lg flex flex-col custom-scrollbar overflow-y-auto">
+      <div class="p-6 border-b border-slate-200">
+        <h1 class="text-2xl font-bold text-slate-900">ข้อมูลลูกค้า</h1>
+        <p class="text-slate-500 mt-1">กรอกรายละเอียดเพื่อบันทึกและปักหมุดบนแผนที่</p>
+      </div>
 
-        <!-- Left Panel: Form Container -->
-        <div class="w-full md:w-1/3 h-full bg-white shadow-lg flex flex-col custom-scrollbar overflow-y-auto">
-            <div class="p-6 border-b border-slate-200">
-                <h1 class="text-2xl font-bold text-slate-900">ข้อมูลลูกค้า</h1>
-                <p class="text-slate-500 mt-1">กรอกรายละเอียดเพื่อบันทึกและปักหมุดบนแผนที่</p>
-            </div>
-            
-            <!-- Province Filter -->
-            <div class="p-6 border-b border-slate-200">
-                <label for="provinceFilter" class="block text-sm font-medium text-slate-700 mb-1">ค้นหาและซูมไปที่จังหวัด</label>
-                <input type="text" id="provinceFilter" list="provinceList" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="พิมพ์ชื่อจังหวัด เช่น เชียงใหม่">
-                <datalist id="provinceList"></datalist>
-            </div>
+      <!-- Province Filter -->
+      <div class="p-6 border-b border-slate-200">
+        <label for="provinceFilter" class="block text-sm font-medium text-slate-700 mb-1">ค้นหาและซูมไปที่จังหวัด</label>
+        <input type="text" id="provinceFilter" list="provinceList" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="พิมพ์ชื่อจังหวัด เช่น เชียงใหม่">
+        <datalist id="provinceList"></datalist>
+      </div>
 
-            <form id="customerForm" class="p-6 space-y-4 flex-grow">
-                <div>
-                    <label for="customerName" class="block text-sm font-medium text-slate-700 mb-1">ชื่อลูกค้า / ร้านค้า <span class="text-red-500">*</span></label>
-                    <input type="text" id="customerName" name="customerName" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="เช่น ร้านใจดีการค้า" required>
-                </div>
-                
-                <!-- UPDATED: Changed from file upload to URL input -->
-                <div>
-                    <label for="imageUrl" class="block text-sm font-medium text-slate-700 mb-1">ลิงก์รูปภาพ (Image URL)</label>
-                    <input type="url" id="imageUrl" name="imageUrl" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://example.com/image.jpg">
-                    <p class="mt-1 text-xs text-slate-500">
-                        *อัปโหลดรูปที่ <a href="https://postimages.org/" target="_blank" class="text-indigo-600 hover:underline">postimages.org</a> แล้วนำ Direct Link มาวาง
-                    </p>
-                </div>
-
-                <div>
-                    <label for="customerAddress" class="block text-sm font-medium text-slate-700 mb-1">ที่อยู่</label>
-                    <textarea id="customerAddress" name="customerAddress" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="บ้านเลขที่, ถนน, ตำบล..."></textarea>
-                </div>
-                <div>
-                    <label for="customerPhone" class="block text-sm font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
-                    <input type="tel" id="customerPhone" name="customerPhone" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="081-234-5678">
-                </div>
-                <div>
-                    <label for="postalCode" class="block text-sm font-medium text-slate-700 mb-1">รหัสไปรษณีย์</label>
-                    <input type="text" id="postalCode" name="postalCode" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="10110">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="latitude" class="block text-sm font-medium text-slate-700 mb-1">ละติจูด (Lat) <span class="text-red-500">*</span></label>
-                        <input type="number" step="any" id="latitude" name="latitude" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="13.7248" required>
-                    </div>
-                    <div>
-                        <label for="longitude" class="block text-sm font-medium text-slate-700 mb-1">ลองจิจูด (Lng) <span class="text-red-500">*</span></label>
-                        <input type="number" step="any" id="longitude" name="longitude" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="100.551" required>
-                    </div>
-                </div>
-                <div class="flex-grow"></div>
-            </form>
-            <div class="p-6 bg-white border-t border-slate-200">
-                 <button type="submit" form="customerForm" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 disabled:bg-slate-400">
-                    บันทึกข้อมูลลูกค้า
-                </button>
-            </div>
+      <!-- FORM -->
+      <form id="customerForm" class="p-6 space-y-4 flex-grow">
+        <div>
+          <label for="customerName" class="block text-sm font-medium text-slate-700 mb-1">ชื่อลูกค้า / ร้านค้า <span class="text-red-500">*</span></label>
+          <input type="text" id="customerName" name="customerName" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="เช่น ร้านใจดีการค้า" required>
         </div>
 
-        <!-- Right Panel: Map Container -->
-        <div id="map" class="w-full md:w-2/3 h-full"></div>
-    </div>
-
-    <!-- UPDATED: Custom Modal for Notifications -->
-    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 ease-in-out">
-        <div id="notificationPanel" class="bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-1/3 text-center transform scale-95 transition-all duration-300 ease-in-out">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                <span class="text-3xl text-green-600">✓</span>
-            </div>
-            <h3 id="notificationTitle" class="mt-4 text-lg font-medium text-slate-900"></h3>
-            <p id="notificationMessage" class="mt-2 text-sm text-slate-600"></p>
-            <button id="notificationClose" class="mt-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 w-full">ตกลง</button>
+        <div>
+          <label for="imageUrl" class="block text-sm font-medium text-slate-700 mb-1">ลิงก์รูปภาพ (Image URL)</label>
+          <input type="url" id="imageUrl" name="imageUrl" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://example.com/image.jpg">
+          <p class="mt-1 text-xs text-slate-500">
+            *อัปโหลดรูปที่
+            <!-- FIX: add rel="noopener" -->
+            <a href="https://postimages.org/" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">postimages.org</a>
+            แล้วนำ Direct Link มาวาง
+          </p>
         </div>
+
+        <div>
+          <label for="customerAddress" class="block text-sm font-medium text-slate-700 mb-1">ที่อยู่</label>
+          <textarea id="customerAddress" name="customerAddress" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="บ้านเลขที่, ถนน, ตำบล..."></textarea>
+        </div>
+
+        <div>
+          <label for="customerPhone" class="block text-sm font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+          <input type="tel" id="customerPhone" name="customerPhone" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="081-234-5678">
+        </div>
+
+        <div>
+          <label for="postalCode" class="block text-sm font-medium text-slate-700 mb-1">รหัสไปรษณีย์</label>
+          <input type="text" id="postalCode" name="postalCode" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="10110">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="latitude" class="block text-sm font-medium text-slate-700 mb-1">ละติจูด (Lat) <span class="text-red-500">*</span></label>
+            <input type="number" step="any" id="latitude" name="latitude" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="13.7248" required>
+          </div>
+          <div>
+            <label for="longitude" class="block text-sm font-medium text-slate-700 mb-1">ลองจิจูด (Lng) <span class="text-red-500">*</span></label>
+            <input type="number" step="any" id="longitude" name="longitude" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="100.551" required>
+          </div>
+        </div>
+
+        <!-- FIX: move submit button INTO the form so form.querySelector finds it -->
+        <div class="pt-2">
+          <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 disabled:bg-slate-400">
+            บันทึกข้อมูลลูกค้า
+          </button>
+        </div>
+      </form>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- 1. INITIALIZATION ---
-            let geojsonLayer;
-            const customerDataByDistrict = {};
-            const provinceData = {}; 
-            
-            // --- Map Layers Definition ---
-            const streetMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 20
-            });
+    <!-- Right Panel: Map -->
+    <div id="map" class="w-full md:w-2/3 h-full"></div>
+  </div>
 
-            const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-	            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            });
-            
-            const baseMaps = {
-                "แผนที่ถนน": streetMap,
-                "แผนที่ดาวเทียม": satelliteMap
-            };
+  <!-- Notification Modal -->
+  <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 ease-in-out">
+    <div id="notificationPanel" class="bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-1/3 text-center transform scale-95 transition-all duration-300 ease-in-out">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+        <span class="text-3xl text-green-600">✓</span>
+      </div>
+      <h3 id="notificationTitle" class="mt-4 text-lg font-medium text-slate-900"></h3>
+      <p id="notificationMessage" class="mt-2 text-sm text-slate-600"></p>
+      <button id="notificationClose" class="mt-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 w-full">ตกลง</button>
+    </div>
+  </div>
 
-            const map = L.map('map', {
-                center: [13.736717, 100.523186],
-                zoom: 6,
-                layers: [streetMap] 
-            });
-            
-            L.control.layers(baseMaps).addTo(map);
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- 1. INIT ---
+      let geojsonLayer;
+      const customerDataByDistrict = {};
+      const provinceData = {};
 
-            // --- 2. UPDATED: NOTIFICATION MODAL ---
-            const modal = document.getElementById('notificationModal');
-            const modalPanel = document.getElementById('notificationPanel');
-            const modalTitle = document.getElementById('notificationTitle');
-            const modalMessage = document.getElementById('notificationMessage');
-            const closeModalBtn = document.getElementById('notificationClose');
+      const streetMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains:'abcd', maxZoom:20
+      });
 
-            function showNotification(title, message) {
-                modalTitle.textContent = title;
-                modalMessage.textContent = message;
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    modalPanel.classList.remove('scale-95');
-                }, 10);
-            }
+      const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution:'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+      });
 
-            function hideNotification() {
-                modal.classList.add('opacity-0');
-                modalPanel.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300); // Match transition duration
-            }
+      const baseMaps = { "แผนที่ถนน": streetMap, "แผนที่ดาวเทียม": satelliteMap };
 
-            closeModalBtn.addEventListener('click', hideNotification);
+      const map = L.map('map', { center:[13.736717,100.523186], zoom:6, layers:[streetMap] });
+      L.control.layers(baseMaps).addTo(map);
 
-            // --- 3. GEOJSON & MAP INTERACTIVITY ---
-            fetch('https://raw.githubusercontent.com/apisit/thailand.json/master/thailand.json')
-                .then(response => response.ok ? response.json() : Promise.reject('Network response was not ok'))
-                .then(data => {
-                    geojsonLayer = L.geoJson(data, { style: defaultStyle, onEachFeature }).addTo(map);
-                    processProvinceData();
-                })
-                .catch(error => {
-                    console.error('Failed to load GeoJSON data:', error);
-                    showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลแผนที่อำเภอได้ กรุณาลองรีเฟรชหน้าเว็บ');
-                });
+      // --- 2. Modal helpers ---
+      const modal = document.getElementById('notificationModal');
+      const modalPanel = document.getElementById('notificationPanel');
+      const modalTitle = document.getElementById('notificationTitle');
+      const modalMessage = document.getElementById('notificationMessage');
+      const closeModalBtn = document.getElementById('notificationClose');
 
-            const defaultStyle = { color: "#4f46e5", weight: 1, opacity: 0.6, fillColor: "#818cf8", fillOpacity: 0.1 };
-            const highlightStyle = { weight: 3, color: '#f59e0b', fillOpacity: 0.4 };
+      function showNotification(title, message){
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modal.classList.remove('hidden');
+        setTimeout(()=>{ modal.classList.remove('opacity-0'); modalPanel.classList.remove('scale-95'); },10);
+      }
+      function hideNotification(){
+        modal.classList.add('opacity-0'); modalPanel.classList.add('scale-95');
+        setTimeout(()=>{ modal.classList.add('hidden'); },300);
+      }
+      closeModalBtn.addEventListener('click', hideNotification);
 
-            function onEachFeature(feature, layer) {
-                layer.on({ mouseover: highlightFeature, mouseout: resetHighlight });
-            }
-
-            function highlightFeature(e) {
-                const layer = e.target;
-                layer.setStyle(highlightStyle);
-                layer.bringToFront();
-                showDistrictPopup(layer);
-            }
-
-            function resetHighlight(e) {
-                geojsonLayer.resetStyle(e.target);
-            }
-
-            function showDistrictPopup(layer) {
-                const props = layer.feature.properties;
-                const districtName = props.AMPHOE_TH; // FIXED: Changed to uppercase
-                const provinceName = props.PROVINCE_TH; // FIXED: Changed to uppercase
-
-                let popupContent = `<div class="customer-popup-content">
-                                        <h3 class="text-lg font-bold text-slate-800">${districtName}</h3>
-                                        <p class="text-sm text-slate-500 mb-2">${provinceName}</p>`;
-
-                const customers = customerDataByDistrict[districtName];
-                if (customers && customers.length > 0) {
-                    popupContent += '<hr class="my-2">';
-                    customers.forEach(customer => {
-                        popupContent += `<div class="customer-entry">
-                                            ${customer.imageUrl ? `<img src="${customer.imageUrl}" alt="${customer.name}" class="w-full h-32 object-cover rounded-md mb-2" onerror="this.style.display='none'">` : ''}
-                                            <p class="font-semibold text-slate-700">${customer.name}</p>
-                                            <p class="text-xs text-slate-500">${customer.address || '<i>ไม่มีข้อมูลที่อยู่</i>'}</p>
-                                            <p class="text-xs text-slate-500">โทร: ${customer.phone || '<i>ไม่มีข้อมูล</i>'}</p>
-                                         </div>`;
-                    });
-                } else {
-                    popupContent += '<p class="text-sm text-slate-500 italic mt-2">ยังไม่มีข้อมูลลูกค้าในพื้นที่นี้</p>';
-                }
-                popupContent += '</div>';
-
-                layer.bindPopup(popupContent, { minWidth: 250, maxHeight: 400 }).openPopup();
-            }
-
-            // --- 4. POINT-IN-POLYGON LOGIC ---
-            function isMarkerInsidePolygon(marker, poly) {
-                const polyPoints = poly.getLatLngs()[0];
-                const x = marker.getLatLng().lat, y = marker.getLatLng().lng;
-                let inside = false;
-                for (let i = 0, j = polyPoints.length - 1; i < polyPoints.length; j = i++) {
-                    const xi = polyPoints[i].lat, yi = polyPoints[i].lng;
-                    const xj = polyPoints[j].lat, yj = polyPoints[j].lng;
-                    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-                    if (intersect) inside = !inside;
-                }
-                return inside;
-            }
-
-            function findDistrictForCoordinates(lat, lng) {
-                if (!geojsonLayer) return null;
-                const point = L.marker([lat, lng]);
-                let foundDistrict = null;
-                geojsonLayer.eachLayer(layer => {
-                    if (foundDistrict) return;
-                    const featureType = layer.feature.geometry.type;
-                    if (featureType === 'Polygon') {
-                        if (isMarkerInsidePolygon(point, layer)) {
-                            foundDistrict = layer.feature.properties.AMPHOE_TH; // FIXED: Changed to uppercase
-                        }
-                    } else if (featureType === 'MultiPolygon') {
-                        for (const polygon of layer.getLatLngs()) {
-                            if (isMarkerInsidePolygon(point, L.polygon(polygon))) {
-                                foundDistrict = layer.feature.properties.AMPHOE_TH; // FIXED: Changed to uppercase
-                                break;
-                            }
-                        }
-                    }
-                });
-                return foundDistrict;
-            }
-
-            // --- 5. FORM HANDLING (UPDATED FOR GOOGLE SHEETS) ---
-            const form = document.getElementById('customerForm');
-            form.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                
-                const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7zn_tNp9lwRysUPy_yuXtK7Z8r4f20TlOAR-ysSxP6rMWp5S3B1ohjTRXR76pnB5P/exec';
-
-                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
-                    showNotification('ตั้งค่าไม่สมบูรณ์', 'กรุณานำ Web app URL จาก Google Apps Script มาใส่ในโค้ดก่อน');
-                    return;
-                }
-
-                const submitButton = form.querySelector('button[type="submit"]');
-                const formData = new FormData(form);
-                const lat = parseFloat(formData.get('latitude'));
-                const lng = parseFloat(formData.get('longitude'));
-
-                if (isNaN(lat) || isNaN(lng)) {
-                    showNotification('ข้อมูลผิดพลาด', 'ค่าละติจูดหรือลองจิจูดไม่ถูกต้อง');
-                    return;
-                }
-
-                const district = findDistrictForCoordinates(lat, lng);
-                if (!district) {
-                    showNotification('ไม่พบพื้นที่', 'ไม่สามารถหาอำเภอจากพิกัดที่ระบุได้');
-                    return;
-                }
-
-                const dataToSend = {
-                    name: formData.get('customerName'),
-                    address: formData.get('customerAddress'),
-                    phone: formData.get('customerPhone'),
-                    postalCode: formData.get('postalCode'),
-                    lat: lat,
-                    lng: lng,
-                    district: district,
-                    imageUrl: formData.get('imageUrl'), // Get the image URL from the new input
-                };
-
-                submitButton.disabled = true;
-                submitButton.textContent = 'กำลังบันทึก...';
-
-                try {
-                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', 
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dataToSend)
-                    });
-
-                    const newCustomer = { ...dataToSend };
-
-                    if (!customerDataByDistrict[district]) {
-                        customerDataByDistrict[district] = [];
-                    }
-                    customerDataByDistrict[district].push(newCustomer);
-
-                    L.marker([lat, lng]).addTo(map).bindPopup(`<b>${newCustomer.name}</b><br>${newCustomer.address || ''}`);
-                    map.flyTo([lat, lng], 12);
-                    showNotification('บันทึกเรียบร้อย!', `ข้อมูลลูกค้า "${newCustomer.name}" ถูกส่งไปบันทึกที่ Google Sheet แล้ว`);
-                    
-                    form.reset();
-
-                } catch (error) {
-                    console.error('Error sending data:', error);
-                    showNotification('ผิดพลาด', 'ไม่สามารถส่งข้อมูลได้ เกิดข้อผิดพลาดทางเครือข่าย');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'บันทึกข้อมูลลูกค้า';
-                }
-            });
-
-            // --- 6. Province Filter Logic ---
-            function processProvinceData() {
-                if (!geojsonLayer) return;
-
-                geojsonLayer.eachLayer(layer => {
-                    const provinceName = layer.feature.properties.PROVINCE_TH; // FIXED: Changed to uppercase
-                    if (!provinceData[provinceName]) {
-                        provinceData[provinceName] = { layers: [] };
-                    }
-                    provinceData[provinceName].layers.push(layer);
-                });
-
-                const provinceList = document.getElementById('provinceList');
-                Object.keys(provinceData).sort((a, b) => a.localeCompare(b, 'th')).forEach(provinceName => {
-                    const featureGroup = L.featureGroup(provinceData[provinceName].layers);
-                    provinceData[provinceName].bounds = featureGroup.getBounds();
-                    
-                    const option = document.createElement('option');
-                    option.value = provinceName;
-                    provinceList.appendChild(option);
-                });
-            }
-
-            const provinceFilterInput = document.getElementById('provinceFilter');
-            provinceFilterInput.addEventListener('input', (e) => {
-                const selectedProvince = e.target.value;
-                if (provinceData[selectedProvince]) {
-                    map.fitBounds(provinceData[selectedProvince].bounds);
-                }
-            });
-
+      // --- 3. GeoJSON ---
+      fetch('https://raw.githubusercontent.com/apisit/thailand.json/master/thailand.json')
+        .then(r=> r.ok ? r.json() : Promise.reject('Network response was not ok'))
+        .then(data=>{
+          geojsonLayer = L.geoJson(data,{ style: defaultStyle, onEachFeature }).addTo(map);
+          processProvinceData();
+        })
+        .catch(err=>{
+          console.error('Failed to load GeoJSON data:', err);
+          showNotification('เกิดข้อผิดพลาด','ไม่สามารถโหลดข้อมูลแผนที่อำเภอได้ กรุณารีเฟรชหน้าเว็บ');
         });
-    </script>
 
+      const defaultStyle = { color:"#4f46e5", weight:1, opacity:.6, fillColor:"#818cf8", fillOpacity:.1 };
+      const highlightStyle = { weight:3, color:'#f59e0b', fillOpacity:.4 };
+
+      function onEachFeature(feature, layer){ layer.on({ mouseover: highlightFeature, mouseout: resetHighlight }); }
+      function highlightFeature(e){ const layer=e.target; layer.setStyle(highlightStyle); layer.bringToFront(); showDistrictPopup(layer); }
+      function resetHighlight(e){ geojsonLayer.resetStyle(e.target); }
+
+      function showDistrictPopup(layer){
+        const props = layer.feature.properties;
+        const districtName = props.AMPHOE_TH;
+        const provinceName = props.PROVINCE_TH;
+        let html = `<div class="customer-popup-content">
+          <h3 class="text-lg font-bold text-slate-800">${districtName}</h3>
+          <p class="text-sm text-slate-500 mb-2">${provinceName}</p>`;
+        const list = customerDataByDistrict[districtName];
+        if(list && list.length){
+          html += '<hr class="my-2">';
+          list.forEach(c=>{
+            html += `<div class="customer-entry">
+              ${c.imageUrl ? `<img src="${c.imageUrl}" alt="${c.name}" class="w-full h-32 object-cover rounded-md mb-2" onerror="this.style.display='none'">` : ''}
+              <p class="font-semibold text-slate-700">${c.name}</p>
+              <p class="text-xs text-slate-500">${c.address || '<i>ไม่มีข้อมูลที่อยู่</i>'}</p>
+              <p class="text-xs text-slate-500">โทร: ${c.phone || '<i>ไม่มีข้อมูล</i>'}</p>
+            </div>`;
+          });
+        }else{
+          html += '<p class="text-sm text-slate-500 italic mt-2">ยังไม่มีข้อมูลลูกค้าในพื้นที่นี้</p>';
+        }
+        html += '</div>';
+        layer.bindPopup(html,{ minWidth:250, maxHeight:400 }).openPopup();
+      }
+
+      // --- 4. Point-in-Polygon ---
+      function isMarkerInsidePolygon(marker, poly){
+        const polyPoints = poly.getLatLngs()[0];
+        const x = marker.getLatLng().lat, y = marker.getLatLng().lng;
+        let inside = false;
+        for(let i=0,j=polyPoints.length-1;i<polyPoints.length;j=i++){
+          const xi = polyPoints[i].lat, yi = polyPoints[i].lng;
+          const xj = polyPoints[j].lat, yj = polyPoints[j].lng;
+          const intersect = ((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi) + xi);
+          if(intersect) inside = !inside;
+        }
+        return inside;
+      }
+
+      function findDistrictForCoordinates(lat,lng){
+        if(!geojsonLayer) return null;
+        const point = L.marker([lat,lng]);
+        let found = null;
+        geojsonLayer.eachLayer(layer=>{
+          if(found) return;
+          const typ = layer.feature.geometry.type;
+          if(typ==='Polygon'){
+            if(isMarkerInsidePolygon(point,layer)) found = layer.feature.properties.AMPHOE_TH;
+          }else if(typ==='MultiPolygon'){
+            for(const polygon of layer.getLatLngs()){
+              if(isMarkerInsidePolygon(point, L.polygon(polygon))){ found = layer.feature.properties.AMPHOE_TH; break; }
+            }
+          }
+        });
+        return found;
+      }
+
+      // --- 5. Form Handling ---
+      const form = document.getElementById('customerForm');
+
+      form.addEventListener('submit', async (ev)=>{
+        ev.preventDefault();
+
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7zn_tNp9lwRysUPy_yuXtK7Z8r4f20TlOAR-ysSxP6rMWp5S3B1ohjTRXR76pnB5P/exec';
+        if(GOOGLE_APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE'){
+          showNotification('ตั้งค่าไม่สมบูรณ์','กรุณาใส่ Web App URL ของ Google Apps Script');
+          return;
+        }
+
+        // this will now WORK because the button is inside the form
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        const fd = new FormData(form);
+        const lat = parseFloat(fd.get('latitude'));
+        const lng = parseFloat(fd.get('longitude'));
+        if(isNaN(lat) || isNaN(lng)){ showNotification('ข้อมูลผิดพลาด','ค่าละติจูด/ลองจิจูดไม่ถูกต้อง'); return; }
+
+        const district = findDistrictForCoordinates(lat,lng);
+        if(!district){ showNotification('ไม่พบพื้นที่','ไม่สามารถหาอำเภอจากพิกัดที่ระบุได้'); return; }
+
+        const dataToSend = {
+          name: fd.get('customerName'),
+          address: fd.get('customerAddress'),
+          phone: fd.get('customerPhone'),
+          postalCode: fd.get('postalCode'),
+          lat, lng, district,
+          imageUrl: fd.get('imageUrl')
+        };
+
+        if(submitButton){ submitButton.disabled = true; submitButton.textContent = 'กำลังบันทึก...'; }
+
+        try{
+          // ส่งแบบ no-cors ตามเดิม (อ่านผลตอบกลับไม่ได้แต่เพียงพอ)
+          await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method:'POST',
+            mode:'no-cors',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify(dataToSend)
+          });
+
+          // --- อัปเดตฝั่งหน้าเว็บทันที ---
+          if(!customerDataByDistrict[district]) customerDataByDistrict[district] = [];
+          customerDataByDistrict[district].push({ ...dataToSend });
+
+          L.marker([lat,lng]).addTo(map).bindPopup(`<b>${dataToSend.name}</b><br>${dataToSend.address||''}`);
+          map.flyTo([lat,lng], 12);
+          showNotification('บันทึกเรียบร้อย!', `ข้อมูลลูกค้า "${dataToSend.name}" ถูกส่งไปบันทึกที่ Google Sheet แล้ว`);
+          form.reset();
+
+          /* ทางเลือก: ถ้าจะทำ CORS ให้สมบูรณ์
+          const body = new URLSearchParams(dataToSend); // แปลงเป็น form-urlencoded
+          await fetch(GOOGLE_APPS_SCRIPT_URL, { method:'POST', body }); // อย่าตั้ง mode กับ headers ให้บราวเซอร์จัดการ
+          */
+
+        }catch(err){
+          console.error('Error sending data:', err);
+          showNotification('ผิดพลาด','ไม่สามารถส่งข้อมูลได้ เกิดข้อผิดพลาดทางเครือข่าย');
+        }finally{
+          if(submitButton){ submitButton.disabled = false; submitButton.textContent = 'บันทึกข้อมูลลูกค้า'; }
+        }
+      });
+
+      // --- 6. Province Filter ---
+      function processProvinceData(){
+        if(!geojsonLayer) return;
+        geojsonLayer.eachLayer(layer=>{
+          const provinceName = layer.feature.properties.PROVINCE_TH;
+          if(!provinceData[provinceName]) provinceData[provinceName] = { layers: [] };
+          provinceData[provinceName].layers.push(layer);
+        });
+
+        const provinceList = document.getElementById('provinceList');
+        Object.keys(provinceData).sort((a,b)=>a.localeCompare(b,'th')).forEach(name=>{
+          const featureGroup = L.featureGroup(provinceData[name].layers);
+          provinceData[name].bounds = featureGroup.getBounds();
+          const option = document.createElement('option'); option.value = name; provinceList.appendChild(option);
+        });
+      }
+
+      const provinceFilterInput = document.getElementById('provinceFilter');
+      provinceFilterInput.addEventListener('input', (e)=>{
+        const selected = e.target.value;
+        if(provinceData[selected]) map.fitBounds(provinceData[selected].bounds);
+      });
+    });
+  </script>
 </body>
 </html>
