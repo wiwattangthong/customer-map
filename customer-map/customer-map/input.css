@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * This file serves as the entry point for Tailwind CSS.  It pulls in the base,
+ * component, and utility styles from Tailwind.  The compiled output will
+ * reside in assets/tailwind.css when built via the provided npm script.
+ */
