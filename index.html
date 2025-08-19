@@ -110,12 +110,15 @@
         <div id="map" class="w-full md:w-2/3 h-full"></div>
     </div>
 
-    <!-- Custom Modal for Notifications -->
-    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-1/3 text-center">
-            <h3 id="notificationTitle" class="text-lg font-medium text-slate-900"></h3>
+    <!-- UPDATED: Custom Modal for Notifications -->
+    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 ease-in-out">
+        <div id="notificationPanel" class="bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-1/3 text-center transform scale-95 transition-all duration-300 ease-in-out">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <span class="text-3xl text-green-600">✓</span>
+            </div>
+            <h3 id="notificationTitle" class="mt-4 text-lg font-medium text-slate-900"></h3>
             <p id="notificationMessage" class="mt-2 text-sm text-slate-600"></p>
-            <button id="notificationClose" class="mt-4 bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">ตกลง</button>
+            <button id="notificationClose" class="mt-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 w-full">ตกลง</button>
         </div>
     </div>
 
@@ -150,8 +153,9 @@
             
             L.control.layers(baseMaps).addTo(map);
 
-            // --- 2. NOTIFICATION MODAL ---
+            // --- 2. UPDATED: NOTIFICATION MODAL ---
             const modal = document.getElementById('notificationModal');
+            const modalPanel = document.getElementById('notificationPanel');
             const modalTitle = document.getElementById('notificationTitle');
             const modalMessage = document.getElementById('notificationMessage');
             const closeModalBtn = document.getElementById('notificationClose');
@@ -160,8 +164,21 @@
                 modalTitle.textContent = title;
                 modalMessage.textContent = message;
                 modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modalPanel.classList.remove('scale-95');
+                }, 10);
             }
-            closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+            function hideNotification() {
+                modal.classList.add('opacity-0');
+                modalPanel.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300); // Match transition duration
+            }
+
+            closeModalBtn.addEventListener('click', hideNotification);
 
             // --- 3. GEOJSON & MAP INTERACTIVITY ---
             fetch('https://raw.githubusercontent.com/apisit/thailand.json/master/thailand.json')
@@ -317,7 +334,7 @@
 
                     L.marker([lat, lng]).addTo(map).bindPopup(`<b>${newCustomer.name}</b><br>${newCustomer.address || ''}`);
                     map.flyTo([lat, lng], 12);
-                    showNotification('สำเร็จ!', `ข้อมูลลูกค้า "${newCustomer.name}" ถูกส่งไปบันทึกที่ Google Sheet แล้ว`);
+                    showNotification('บันทึกเรียบร้อย!', `ข้อมูลลูกค้า "${newCustomer.name}" ถูกส่งไปบันทึกที่ Google Sheet แล้ว`);
                     
                     form.reset();
 
